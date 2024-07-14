@@ -21,12 +21,13 @@ export class AwscdkAppMediapackageDiscontinuityTestStack extends Stack {
         },
         {
           url: 's3ssl://aems-input/dog-snow.mp4',
-          conversionType: 'RTP_PUSH',
+          conversionType: 'RTMP_PUSH',
         },
       ],
       channelClass: 'STANDARD',
       encoderSpec: {
         timecodeBurninPrefix: 'DISCONTINUITY-TEST',
+        gopLengthInSeconds: 1,
       },
       packagerSpec: {
         startoverWindowSeconds: 1209600,
