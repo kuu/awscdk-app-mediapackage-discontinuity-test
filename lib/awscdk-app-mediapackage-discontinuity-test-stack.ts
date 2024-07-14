@@ -7,7 +7,7 @@ import { Topic } from 'aws-cdk-lib/aws-sns';
 import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Lambda } from './Lambda';
 
-const emalAddress = 'YOUR-EMAIL-ADDRESS';
+const emalAddress = 'YOUR_EMAIL_ADDRESS';
 
 export class AwscdkAppMediapackageDiscontinuityTestStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -15,20 +15,31 @@ export class AwscdkAppMediapackageDiscontinuityTestStack extends Stack {
 
     // Create a live channel (MediaLive + MediaPackage)
     const {eml, empv1, empv2} = new LiveChannelFromMp4(this, 'LiveChannelFromMp4', {
-      sourceUrl: [
-        's3ssl://aems-input/dog.mp4',
-        's3ssl://aems-input/dog-snow.mp4',
+      source: [
+        {
+          url: 's3ssl://aems-input/dog.mp4',
+        },
+        {
+          url: 's3ssl://aems-input/dog-snow.mp4',
+          conversionType: 'RTP_PUSH',
+        },
       ],
-      mediaPackageV2Settings: {
-        channelGroupName: 'my-first-channel-group',
-        omitLlHls: true,
+      channelClass: 'STANDARD',
+      encoderSpec: {
+        timecodeBurninPrefix: 'DISCONTINUITY-TEST',
+      },
+      packagerSpec: {
+        startoverWindowSeconds: 1209600,
+        separateAudioRendition: true,
+        mediaPackageV2Settings: {
+          channelGroupName: 'my-first-channel-group',
+          omitLlHls: true,
+        },
       },
       autoStart: true,
-      startoverWindowSeconds: 1209600,
-      separateAudioRendition: true,
-      timecodeBurninPrefix: 'DISCONTINUITY-TEST_:',
-      hasTimecodeInSource: true,
     });
+
+    const channelStartTime = Math.floor(Date.now() / 1000);
 
     const inputAttachments = (eml.channel.inputAttachments as CfnChannel.InputAttachmentProperty[])
       .map(({inputAttachmentName}) => inputAttachmentName ? inputAttachmentName : '')
@@ -46,11 +57,11 @@ export class AwscdkAppMediapackageDiscontinuityTestStack extends Stack {
     });
     notificationTopic.addSubscription(new EmailSubscription(emalAddress));
 
-    if (empv1) {
+    if (empv1 && empv1.endpoints.hls) {
       // Create Lambda function to fetch the MediaPackage endpoint URL
       const lambdaV1 = new Lambda(this, 'UrlFetchLambdaFunction-V1', {
         url: empv1.endpoints.hls.attrUrl,
-        offsetInMinutes: -30,
+        channelStartTime,
         topicArn: notificationTopic.topicArn,
       });
 
@@ -68,11 +79,11 @@ export class AwscdkAppMediapackageDiscontinuityTestStack extends Stack {
       });
     }
 
-    if (empv2) {
+    if (empv2 && empv2.endpointUrls.hls) {
       // Create Lambda function to fetch the MediaPackage endpoint URL
       const lambdaV2 = new Lambda(this, 'UrlFetchLambdaFunction-V2', {
         url: empv2.endpointUrls.hls,
-        offsetInMinutes: -30,
+        channelStartTime,
         topicArn: notificationTopic.topicArn,
       });
 

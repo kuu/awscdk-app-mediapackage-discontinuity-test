@@ -8,7 +8,7 @@ import { Construct } from 'constructs';
 
 export interface LambdaProps {
   readonly url: string; // Playlist URL
-  readonly offsetInMinutes: number; // Offset in minutes
+  readonly channelStartTime: number; // Channel start time
   readonly topicArn: string; // SNS Topic ARN
 }
 
@@ -18,7 +18,7 @@ export class Lambda extends Construct {
   constructor(scope: Construct, id: string, props: LambdaProps) {
     super(scope, id);
 
-    const { url, offsetInMinutes, topicArn } = props;
+    const { url, channelStartTime, topicArn } = props;
 
     const TS_ENTRY = path.resolve(__dirname, 'code', 'index.ts');
     const JS_ENTRY = path.resolve(__dirname, 'code', 'index.js');
@@ -32,7 +32,7 @@ export class Lambda extends Construct {
         NODE_ENV: process.env.NODE_ENV as string,
         REGION: process.env.CDK_DEFAULT_REGION as string,
         MASTER_PLAYLIST_URL: url,
-        OFFSET_IN_MINUTE: offsetInMinutes.toString(10),
+        CHANNEL_START_TIME: channelStartTime.toString(10),
         SNS_TOPIC_ARN: topicArn,
       },
       logRetention: logs.RetentionDays.TWO_WEEKS,

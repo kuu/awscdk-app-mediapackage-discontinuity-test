@@ -23,7 +23,7 @@
     "@aws-sdk/client-sns": "^3.609.0",
     "aws-cdk-lib": "2.148.0",
     "awscdk-construct-input-switch-scheduler": "^0.0.2",
-    "awscdk-construct-live-channel-from-mp4-file": "^0.0.34",
+    "awscdk-construct-live-channel-from-mp4-file": "^1.0.0",
     "constructs": "^10.3.0",
     "hls-parser": "^0.13.3",
     "node-fetch": "^3.3.2",
